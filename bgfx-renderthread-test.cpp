@@ -1,38 +1,146 @@
+#include "bgfx/bgfx.h"
+#include "bgfx/platform.h"
+
 #include <GLFW/glfw3.h>
+#include <thread>
+#include <atomic>
+
+//TODO: could support GLFW_EXPOSE_NATIVE_EGL
+#if BX_PLATFORM_LINUX
+    #define GLFW_EXPOSE_NATIVE_X11
+    #define GLFW_EXPOSE_NATIVE_GLX
+#elif BX_PLATFORM_WINDOWS
+    #define GLFW_EXPOSE_NATIVE_WIN32
+    #define GLFW_EXPOSE_NATIVE_WGL
+#elif BX_PLATFORM_OSX
+#define GLFW_EXPOSE_NATIVE_COCOA
+#define GLFW_EXPOSE_NATIVE_NSGL
+#endif
+#include "GLFW/glfw3native.h"
+
 
 int main(void)
 {
-    GLFWwindow* window;
+    bool bUseOpenGL = true;
+    int width = 640, height = 480;
 
     /* Initialize the library */
     if (!glfwInit())
         return -1;
 
-    /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "GLFW CMake starter", NULL, NULL);
+    bgfx::PlatformData pd;
+    GLFWwindow* window = nullptr;
+#if BX_PLATFORM_LINUX
+    assert(false); //TODO
+    //glfwGetGLXWindow(window);
+    //glfwGetGLXContext(window);
+#elif BX_PLATFORM_WINDOWS
+    glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
+    window = glfwCreateWindow(width, height, "bgfx-renderthread-test", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
         return -1;
     }
+    // pd.context = glfwGetWGLContext(window);
+    pd.nwh = glfwGetWin32Window(window);
+#elif BX_PLATFORM_OSX
+    if( !bUseOpenGL )
+    {
+        glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
+    }
+    window = glfwCreateWindow(width, height, "bgfx-renderthread-test", NULL, NULL);
+    if (!window)
+    {
+        glfwTerminate();
+        return -1;
+    }
+    if( bUseOpenGL )
+    {
+        pd.context = glfwGetNSGLContext(window_);
+    }
+    else
+    {
+        pd.nwh = [glfwGetCocoaWindow(window_) contentView];
+    }
+#endif
 
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
-    glClearColor( 0.4f, 0.3f, 0.4f, 0.0f );
+    bgfx::setPlatformData(pd);
 
-    /* Loop until the user closes the window */
+    const bgfx::ViewId view_id = 0;
+    
+    glfwGetWindowSize(window, &width, &height);
+    
+    
+    std::atomic<int> shutdown(0);
+
+    std::thread draw_thread( [&shutdown,window, &width, &height, view_id, bUseOpenGL]
+    {
+        bgfx::Init bgfx_init;
+        bgfx_init.resolution.width = (uint32_t)width;
+        bgfx_init.resolution.height = (uint32_t)height;
+        bgfx_init.resolution.reset = BGFX_RESET_VSYNC;
+        if( bUseOpenGL )
+        {
+            bgfx_init.type = bgfx::RendererType::OpenGL;
+        }
+        if (!bgfx::init(bgfx_init))
+        {
+            return;
+        }
+            
+        bgfx::setViewClear(view_id, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x7F003FFF, 1.0f, 0);
+        bgfx::setViewRect(view_id, 0, 0, bgfx::BackbufferRatio::Equal);
+            
+        int prevWidth = width;
+        int prevHeight = height;
+        while(!shutdown) {
+                
+            bgfx::touch(view_id);
+                
+            // width and height may change outside loop, so we store in a temp variable
+            // this will eventually lead to correct results, but in future should add better approach
+            int newWidth  = width;
+            int newHeight = height;
+            if( newWidth != prevWidth || newHeight != prevHeight )
+            {
+                bgfx::setViewRect(view_id, 0, 0, newWidth, newHeight );
+                bgfx::reset((uint32_t)newWidth, (uint32_t)newHeight, BGFX_RESET_VSYNC);
+                prevWidth  = newWidth;
+                prevHeight = newHeight;
+            }
+                
+            bgfx::RendererType::Enum supported_renderers[bgfx::RendererType::Count];
+            const uint32_t supported_renderer_count = bgfx::getSupportedRenderers( bgfx::RendererType::Count, supported_renderers );
+            const auto renderer_type = bgfx::getRendererType();
+                
+            bgfx::setDebug(BGFX_DEBUG_TEXT);
+            bgfx::dbgTextClear();
+            bgfx::dbgTextPrintf(0, 0, 0x0f, "Supported renderers:");
+            for (uint32_t i = 0; i < supported_renderer_count; i++)
+            {
+                bgfx::dbgTextPrintf(0, i+1, 0x0f, "%s", bgfx::getRendererName(supported_renderers[i]));
+            }
+            bgfx::dbgTextPrintf(0, supported_renderer_count + 2, 0x0f, "Selected renderer: %s", bgfx::getRendererName(renderer_type));
+            bgfx::dbgTextPrintf(0, supported_renderer_count + 3, 0x0f, "Width %d, Heigh %d", width, height );
+                
+            bgfx::frame();
+        }
+        bgfx::shutdown();
+
+    });
+
+    
     while (!glfwWindowShouldClose(window))
     {
-        /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
-
-        /* Poll for and process events */
-        glfwPollEvents();
+        glfwWaitEvents(); // in this example we use wait to ensure we do not loop needlessly
+        glfwGetWindowSize(window, &width, &height);
     }
+    
+    shutdown = 1;
 
+        draw_thread.join();
     glfwTerminate();
+    
     return 0;
 }

@@ -28,6 +28,7 @@ include_directories( bx/include bx/3rdparty )
 set( BX_SRC
 	 bx/src/allocator.cpp
 	 bx/src/bx_p.h
+	 bx/src/debug.cpp
 	 bx/src/file.cpp
 	 bx/src/math.cpp
 	 bx/src/process.cpp
@@ -81,6 +82,7 @@ set( BGFX_SRC
 	 bgfx/src/glcontext_glx.cpp
 	 bgfx/src/renderer_d3d11.cpp
 	 bgfx/src/renderer_gnm.cpp
+	 bgfx/src/renderer_nvn.cpp
 	 bgfx/src/renderer_webgpu.cpp
 	 bgfx/src/shader_spirv.cpp
 	 bgfx/src/debug_renderdoc.cpp
@@ -120,7 +122,7 @@ if( APPLE )
     SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" )
 endif()
 if( MSVC )
-	add_definitions("/D\"_CRT_SECURE_NO_WARNINGS\"")
+	add_definitions("/D\"_CRT_SECURE_NO_WARNINGS\" /D\"__STDC_FORMAT_MACROS\"")
 endif()
      
 add_executable( bgfx-renderthread-test WIN32 ${BGFX-RENDERTHREAD-TEST-SRC} )
