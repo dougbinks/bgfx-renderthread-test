@@ -21,8 +21,24 @@
 
 int main(void)
 {
-    bool bUseOpenGL = true;
+    bgfx::RendererType::Enum preferredRenderer = bgfx::RendererType::OpenGL;
     int width = 640, height = 480;
+
+    bgfx::RendererType::Enum supported_renderers[bgfx::RendererType::Count];
+    const uint32_t supported_renderer_count = bgfx::getSupportedRenderers( bgfx::RendererType::Count, supported_renderers );
+    bool preferredRendererSupported = false;
+    for (uint32_t i = 0; i < supported_renderer_count; i++)
+    {
+        if( supported_renderers[i] == preferredRenderer )
+        {
+            preferredRendererSupported = true;
+            break;
+        }
+    }
+    if( !preferredRendererSupported )
+    {
+        preferredRenderer = bgfx::RendererType::Noop;
+    }
 
     /* Initialize the library */
     if (!glfwInit())
@@ -35,17 +51,7 @@ int main(void)
     //glfwGetGLXWindow(window);
     //glfwGetGLXContext(window);
 #elif BX_PLATFORM_WINDOWS
-    glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
-    window = glfwCreateWindow(width, height, "bgfx-renderthread-test", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
-    // pd.context = glfwGetWGLContext(window);
-    pd.nwh = glfwGetWin32Window(window);
-#elif BX_PLATFORM_OSX
-    if( !bUseOpenGL )
+    if( preferredRenderer != bgfx::RendererType::OpenGL )
     {
         glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
     }
@@ -55,7 +61,23 @@ int main(void)
         glfwTerminate();
         return -1;
     }
-    if( bUseOpenGL )
+    if( preferredRenderer == bgfx::RendererType::OpenGL )
+    {
+        pd.context = glfwGetWGLContext(window);
+    }
+    pd.nwh = glfwGetWin32Window(window); // do not need glfwGetWGLContext(window);
+#elif BX_PLATFORM_OSX
+    if( preferredRenderer != bgfx::RendererType::OpenGL )
+    {
+        glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
+    }
+    window = glfwCreateWindow(width, height, "bgfx-renderthread-test", NULL, NULL);
+    if (!window)
+    {
+        glfwTerminate();
+        return -1;
+    }
+    if( preferredRenderer == bgfx::RendererType::OpenGL )
     {
         pd.context = glfwGetNSGLContext(window_);
     }
@@ -71,19 +93,16 @@ int main(void)
     
     glfwGetWindowSize(window, &width, &height);
     
-    
     std::atomic<int> shutdown(0);
 
-    std::thread draw_thread( [&shutdown,window, &width, &height, view_id, bUseOpenGL]
+    std::thread draw_thread( [=, &shutdown, &width, &height]
     {
         bgfx::Init bgfx_init;
         bgfx_init.resolution.width = (uint32_t)width;
         bgfx_init.resolution.height = (uint32_t)height;
         bgfx_init.resolution.reset = BGFX_RESET_VSYNC;
-        if( bUseOpenGL )
-        {
-            bgfx_init.type = bgfx::RendererType::OpenGL;
-        }
+        bgfx_init.type = preferredRenderer;
+
         if (!bgfx::init(bgfx_init))
         {
             return;
@@ -110,8 +129,6 @@ int main(void)
                 prevHeight = newHeight;
             }
                 
-            bgfx::RendererType::Enum supported_renderers[bgfx::RendererType::Count];
-            const uint32_t supported_renderer_count = bgfx::getSupportedRenderers( bgfx::RendererType::Count, supported_renderers );
             const auto renderer_type = bgfx::getRendererType();
                 
             bgfx::setDebug(BGFX_DEBUG_TEXT);
@@ -122,7 +139,7 @@ int main(void)
                 bgfx::dbgTextPrintf(0, i+1, 0x0f, "%s", bgfx::getRendererName(supported_renderers[i]));
             }
             bgfx::dbgTextPrintf(0, supported_renderer_count + 2, 0x0f, "Selected renderer: %s", bgfx::getRendererName(renderer_type));
-            bgfx::dbgTextPrintf(0, supported_renderer_count + 3, 0x0f, "Width %d, Heigh %d", width, height );
+            bgfx::dbgTextPrintf(0, supported_renderer_count + 3, 0x0f, "Width %d, Height %d", width, height );
                 
             bgfx::frame();
         }
@@ -139,7 +156,7 @@ int main(void)
     
     shutdown = 1;
 
-        draw_thread.join();
+    draw_thread.join();
     glfwTerminate();
     
     return 0;
