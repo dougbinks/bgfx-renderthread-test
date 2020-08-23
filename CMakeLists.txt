@@ -8,11 +8,8 @@ set( GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only" )
 add_subdirectory( glfw )
 
 if( MSVC )
-    SET( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup" )
-endif()
-
-if( MSVC )
 	include_directories( bx/include/compat/msvc )
+    SET( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup" )
 endif()
 if( MINGW )
 	include_directories( bx/include/compat/mingw )
@@ -99,27 +96,29 @@ set( BGFX_SRC
 	)
 
 if( APPLE )
-list( APPEND BGFX_SRC
-	  bgfx/src/amalgamated.mm
+	list( APPEND BGFX_SRC
 	  bgfx/src/glcontext_eagl.mm
 	  bgfx/src/glcontext_nsgl.mm
 	  bgfx/src/renderer_mtl.mm
 	)
+
 endif()
 	
 add_library( bx STATIC ${BX_SRC} )
 add_library( bimg STATIC ${BIMG_SRC} )
 add_library( bgfx STATIC ${BGFX_SRC} )
 
+
 set( BGFX-RENDERTHREAD-TEST-SRC
      bgfx-renderthread-test.cpp
      )
 	 
 if( UNIX )
-    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
+    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14" )
 endif()
 if( APPLE )
-    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" )
+    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -ObjC++" )
+    set_source_files_properties( bgfx/src/renderer_vk.cpp ${BGFX-RENDERTHREAD-TEST-SRC} PROPERTIES XCODE_EXPLICIT_FILE_TYPE sourcecode.cpp.objcpp )
 endif()
 if( MSVC )
 	add_definitions("/D\"_CRT_SECURE_NO_WARNINGS\" /D\"__STDC_FORMAT_MACROS\"")
@@ -133,6 +132,10 @@ if( OpenGL_FOUND )
 	target_link_libraries( bgfx-renderthread-test ${OPENGL_LIBRARIES} bx bimg bgfx glfw )
 else()
 	target_link_libraries( bgfx-renderthread-test bx bimg bgfx glfw )
+endif()
+
+if( APPLE )
+    target_link_libraries( bgfx-renderthread-test "-framework Metal -framework QuartzCore" )  
 endif()
 
 if( MSVC )

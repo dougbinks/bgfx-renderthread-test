@@ -79,11 +79,11 @@ int main(void)
     }
     if( preferredRenderer == bgfx::RendererType::OpenGL )
     {
-        pd.context = glfwGetNSGLContext(window_);
+        pd.context = glfwGetNSGLContext(window);
     }
     else
     {
-        pd.nwh = [glfwGetCocoaWindow(window_) contentView];
+        pd.nwh = [glfwGetCocoaWindow(window) contentView];
     }
 #endif
 
