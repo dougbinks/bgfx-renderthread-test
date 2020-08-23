@@ -7,103 +7,111 @@ set( GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only" )
 
 add_subdirectory( glfw )
 
+if( APPLE )
+    include_directories( bx/include/compat/osx )
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -ObjC++" )
+    set_source_files_properties( bgfx/src/renderer_vk.cpp ${BGFX-RENDERTHREAD-TEST-SRC} PROPERTIES XCODE_EXPLICIT_FILE_TYPE sourcecode.cpp.objcpp )
+endif()
 if( MSVC )
-	include_directories( bx/include/compat/msvc )
-    SET( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup" )
+    include_directories( bx/include/compat/msvc )
+    set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup" )
+    add_definitions("/D\"_CRT_SECURE_NO_WARNINGS\" /D\"__STDC_FORMAT_MACROS\"")
 endif()
 if( MINGW )
-	include_directories( bx/include/compat/mingw )
+    include_directories( bx/include/compat/mingw )
 endif()
-if( APPLE )
-	include_directories( bx/include/compat/osx )
+if( UNIX )
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14" )
 endif()
 if (${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
-	include_directories( bx/include/compat/freebsd )
+    include_directories( bx/include/compat/freebsd )
 endif()
+
+
 include_directories( bx/include bx/3rdparty )	
 # for simplicity not adding headers to source
 set( BX_SRC
-	 bx/src/allocator.cpp
-	 bx/src/bx_p.h
-	 bx/src/debug.cpp
-	 bx/src/file.cpp
-	 bx/src/math.cpp
-	 bx/src/process.cpp
-	 bx/src/sort.cpp
-	 bx/src/timer.cpp
-	 bx/src/commandline.cpp
-	 bx/src/dtoa.cpp
-	 bx/src/filepath.cpp
-	 bx/src/mutex.cpp
-	 bx/src/semaphore.cpp
-	 bx/src/string.cpp
-	 bx/src/url.cpp
-	 bx/src/bx.cpp
-	 bx/src/easing.cpp
-	 bx/src/hash.cpp
-	 bx/src/os.cpp
-	 bx/src/settings.cpp
-	 bx/src/thread.cpp
-	)
+     bx/src/allocator.cpp
+     bx/src/bx_p.h
+     bx/src/debug.cpp
+     bx/src/file.cpp
+     bx/src/math.cpp
+     bx/src/process.cpp
+     bx/src/sort.cpp
+     bx/src/timer.cpp
+     bx/src/commandline.cpp
+     bx/src/dtoa.cpp
+     bx/src/filepath.cpp
+     bx/src/mutex.cpp
+     bx/src/semaphore.cpp
+     bx/src/string.cpp
+     bx/src/url.cpp
+     bx/src/bx.cpp
+     bx/src/easing.cpp
+     bx/src/hash.cpp
+     bx/src/os.cpp
+     bx/src/settings.cpp
+     bx/src/thread.cpp
+    )
 
 include_directories( bimg/include bimg/3rdparty bimg/3rdparty/astc-codec bimg/3rdparty/astc-codec/include bimg/3rdparty/iqa/include )	
 set( BIMG_SRC
-	 bimg/src/bimg_p.h
-	 bimg/src/config.h
-	 bimg/src/image.cpp
-	 bimg/src/image_cubemap_filter.cpp
-	 bimg/src/image_decode.cpp
-	 bimg/src/image_encode.cpp
-	 bimg/src/image_gnf.cpp
-	 bimg/3rdparty/astc-codec/src/decoder/astc_file.cc
-	 bimg/3rdparty/astc-codec/src/decoder/endpoint_codec.cc
-	 bimg/3rdparty/astc-codec/src/decoder/integer_sequence_codec.cc
-	 bimg/3rdparty/astc-codec/src/decoder/logical_astc_block.cc
-	 bimg/3rdparty/astc-codec/src/decoder/physical_astc_block.cc
-	 bimg/3rdparty/astc-codec/src/decoder/weight_infill.cc
-	 bimg/3rdparty/astc-codec/src/decoder/codec.cc
-	 bimg/3rdparty/astc-codec/src/decoder/footprint.cc
-	 bimg/3rdparty/astc-codec/src/decoder/intermediate_astc_block.cc
-	 bimg/3rdparty/astc-codec/src/decoder/partition.cc
-	 bimg/3rdparty/astc-codec/src/decoder/quantization.cc
-	)
-	
+     bimg/src/bimg_p.h
+     bimg/src/config.h
+     bimg/src/image.cpp
+     bimg/src/image_cubemap_filter.cpp
+     bimg/src/image_decode.cpp
+     bimg/src/image_encode.cpp
+     bimg/src/image_gnf.cpp
+     bimg/3rdparty/astc-codec/src/decoder/astc_file.cc
+     bimg/3rdparty/astc-codec/src/decoder/endpoint_codec.cc
+     bimg/3rdparty/astc-codec/src/decoder/integer_sequence_codec.cc
+     bimg/3rdparty/astc-codec/src/decoder/logical_astc_block.cc
+     bimg/3rdparty/astc-codec/src/decoder/physical_astc_block.cc
+     bimg/3rdparty/astc-codec/src/decoder/weight_infill.cc
+     bimg/3rdparty/astc-codec/src/decoder/codec.cc
+     bimg/3rdparty/astc-codec/src/decoder/footprint.cc
+     bimg/3rdparty/astc-codec/src/decoder/intermediate_astc_block.cc
+     bimg/3rdparty/astc-codec/src/decoder/partition.cc
+     bimg/3rdparty/astc-codec/src/decoder/quantization.cc
+    )
+    
 include_directories( bgfx/include bgfx/3rdparty bgfx/3rdparty/dxsdk/include bgfx/3rdparty/khronos )
 set( BGFX_SRC
-	 bgfx/src/glcontext_egl.cpp
-	 bgfx/src/nvapi.cpp
-	 bgfx/src/renderer_gl.cpp
-	 bgfx/src/renderer_vk.cpp
-	 bgfx/src/shader_dxbc.cpp
-	 bgfx/src/bgfx.cpp
-	 bgfx/src/glcontext_glx.cpp
-	 bgfx/src/renderer_d3d11.cpp
-	 bgfx/src/renderer_gnm.cpp
-	 bgfx/src/renderer_nvn.cpp
-	 bgfx/src/renderer_webgpu.cpp
-	 bgfx/src/shader_spirv.cpp
-	 bgfx/src/debug_renderdoc.cpp
-	 bgfx/src/glcontext_html5.cpp
-	 bgfx/src/renderer_d3d12.cpp
-	 bgfx/src/renderer_noop.cpp
-	 bgfx/src/shader.cpp
-	 bgfx/src/topology.cpp
-	 bgfx/src/dxgi.cpp
-	 bgfx/src/glcontext_wgl.cpp
-	 bgfx/src/renderer_d3d9.cpp
-	 bgfx/src/shader_dx9bc.cpp
-	 bgfx/src/vertexlayout.cpp
-	)
+     bgfx/src/glcontext_egl.cpp
+     bgfx/src/nvapi.cpp
+     bgfx/src/renderer_gl.cpp
+     bgfx/src/renderer_vk.cpp
+     bgfx/src/shader_dxbc.cpp
+     bgfx/src/bgfx.cpp
+     bgfx/src/glcontext_glx.cpp
+     bgfx/src/renderer_d3d11.cpp
+     bgfx/src/renderer_gnm.cpp
+     bgfx/src/renderer_nvn.cpp
+     bgfx/src/renderer_webgpu.cpp
+     bgfx/src/shader_spirv.cpp
+     bgfx/src/debug_renderdoc.cpp
+     bgfx/src/glcontext_html5.cpp
+     bgfx/src/renderer_d3d12.cpp
+     bgfx/src/renderer_noop.cpp
+     bgfx/src/shader.cpp
+     bgfx/src/topology.cpp
+     bgfx/src/dxgi.cpp
+     bgfx/src/glcontext_wgl.cpp
+     bgfx/src/renderer_d3d9.cpp
+     bgfx/src/shader_dx9bc.cpp
+     bgfx/src/vertexlayout.cpp
+    )
 
 if( APPLE )
-	list( APPEND BGFX_SRC
-	  bgfx/src/glcontext_eagl.mm
-	  bgfx/src/glcontext_nsgl.mm
-	  bgfx/src/renderer_mtl.mm
-	)
+    list( APPEND BGFX_SRC
+      bgfx/src/glcontext_eagl.mm
+      bgfx/src/glcontext_nsgl.mm
+      bgfx/src/renderer_mtl.mm
+    )
 
 endif()
-	
+    
 add_library( bx STATIC ${BX_SRC} )
 add_library( bimg STATIC ${BIMG_SRC} )
 add_library( bgfx STATIC ${BGFX_SRC} )
@@ -112,26 +120,15 @@ add_library( bgfx STATIC ${BGFX_SRC} )
 set( BGFX-RENDERTHREAD-TEST-SRC
      bgfx-renderthread-test.cpp
      )
-	 
-if( UNIX )
-    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14" )
-endif()
-if( APPLE )
-    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -ObjC++" )
-    set_source_files_properties( bgfx/src/renderer_vk.cpp ${BGFX-RENDERTHREAD-TEST-SRC} PROPERTIES XCODE_EXPLICIT_FILE_TYPE sourcecode.cpp.objcpp )
-endif()
-if( MSVC )
-	add_definitions("/D\"_CRT_SECURE_NO_WARNINGS\" /D\"__STDC_FORMAT_MACROS\"")
-endif()
      
 add_executable( bgfx-renderthread-test WIN32 ${BGFX-RENDERTHREAD-TEST-SRC} )
 
 find_package( OpenGL )
 if( OpenGL_FOUND )
-	include_directories( ${OPENGL_INCLUDE_DIRS} )
-	target_link_libraries( bgfx-renderthread-test ${OPENGL_LIBRARIES} bx bimg bgfx glfw )
+    include_directories( ${OPENGL_INCLUDE_DIRS} )
+    target_link_libraries( bgfx-renderthread-test ${OPENGL_LIBRARIES} bx bimg bgfx glfw )
 else()
-	target_link_libraries( bgfx-renderthread-test bx bimg bgfx glfw )
+    target_link_libraries( bgfx-renderthread-test bx bimg bgfx glfw )
 endif()
 
 if( APPLE )
