@@ -46,37 +46,32 @@ int main(void)
 
     bgfx::PlatformData pd;
     GLFWwindow* window = nullptr;
-#if BX_PLATFORM_LINUX
-    assert(false); //TODO
-    //glfwGetGLXWindow(window);
-    //glfwGetGLXContext(window);
-#elif BX_PLATFORM_WINDOWS
+
     if( preferredRenderer != bgfx::RendererType::OpenGL )
     {
         glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
     }
+
     window = glfwCreateWindow(width, height, "bgfx-renderthread-test", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
         return -1;
     }
+
+#if BX_PLATFORM_LINUX
+    if( preferredRenderer == bgfx::RendererType::OpenGL )
+    {
+        pd.context = glfwGetGLXContext(window);
+    }
+    pd.nwh = (void*)glfwGetGLXWindow(window);
+#elif BX_PLATFORM_WINDOWS
     if( preferredRenderer == bgfx::RendererType::OpenGL )
     {
         pd.context = glfwGetWGLContext(window);
     }
     pd.nwh = glfwGetWin32Window(window); // do not need glfwGetWGLContext(window);
 #elif BX_PLATFORM_OSX
-    if( preferredRenderer != bgfx::RendererType::OpenGL )
-    {
-        glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
-    }
-    window = glfwCreateWindow(width, height, "bgfx-renderthread-test", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
     if( preferredRenderer == bgfx::RendererType::OpenGL )
     {
         pd.context = glfwGetNSGLContext(window);

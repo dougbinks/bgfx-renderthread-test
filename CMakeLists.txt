@@ -116,19 +116,25 @@ add_library( bx STATIC ${BX_SRC} )
 add_library( bimg STATIC ${BIMG_SRC} )
 add_library( bgfx STATIC ${BGFX_SRC} )
 
-
 set( BGFX-RENDERTHREAD-TEST-SRC
      bgfx-renderthread-test.cpp
      )
      
 add_executable( bgfx-renderthread-test WIN32 ${BGFX-RENDERTHREAD-TEST-SRC} )
 
-find_package( OpenGL )
-if( OpenGL_FOUND )
-    include_directories( ${OPENGL_INCLUDE_DIRS} )
-    target_link_libraries( bgfx-renderthread-test ${OPENGL_LIBRARIES} bx bimg bgfx glfw )
+
+find_package( OpenGL REQUIRED)
+
+include_directories( ${OPENGL_INCLUDE_DIRS} )
+target_link_libraries( bimg bx )
+
+if( UNIX )
+    find_package(X11 REQUIRED)
+    link_libraries( bgfx ${OPENGL_LIBRARIES} bimg bx ${X11_LIBRARIES})
+    target_link_libraries( bgfx-renderthread-test ${OPENGL_LIBRARIES} bgfx ${OPENGL_LIBRARIES} bimg bx ${X11_LIBRARIES} glfw )
 else()
-    target_link_libraries( bgfx-renderthread-test bx bimg bgfx glfw )
+    target_link_libraries( bgfx ${OPENGL_LIBRARIES} bimg bx )
+    target_link_libraries( bgfx-renderthread-test ${OPENGL_LIBRARIES} bgfx glfw )
 endif()
 
 if( APPLE )
