@@ -24,12 +24,12 @@ int main(void)
     bgfx::RendererType::Enum preferredRenderer = bgfx::RendererType::OpenGL;
     int width = 640, height = 480;
 
-    bgfx::RendererType::Enum supported_renderers[bgfx::RendererType::Count];
-    const uint32_t supported_renderer_count = bgfx::getSupportedRenderers( bgfx::RendererType::Count, supported_renderers );
+    bgfx::RendererType::Enum pre_init_supported_renderers[bgfx::RendererType::Count];
+    const uint32_t pre_init_supported_renderer_count = bgfx::getSupportedRenderers( bgfx::RendererType::Count, pre_init_supported_renderers );
     bool preferredRendererSupported = false;
-    for (uint32_t i = 0; i < supported_renderer_count; i++)
+    for (uint32_t i = 0; i < pre_init_supported_renderer_count; i++)
     {
-        if( supported_renderers[i] == preferredRenderer )
+        if( pre_init_supported_renderers[i] == preferredRenderer )
         {
             preferredRendererSupported = true;
             break;
@@ -37,7 +37,7 @@ int main(void)
     }
     if( !preferredRendererSupported )
     {
-        preferredRenderer = bgfx::RendererType::Noop;
+        preferredRenderer = bgfx::RendererType::Count;
     }
 
     /* Initialize the library */
@@ -104,7 +104,8 @@ int main(void)
         {
             return;
         }
-            
+        bgfx::RendererType::Enum supported_renderers[bgfx::RendererType::Count];
+        const uint32_t supported_renderer_count = bgfx::getSupportedRenderers( bgfx::RendererType::Count, supported_renderers );
         bgfx::setViewClear(view_id, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x7F003FFF, 1.0f, 0);
         bgfx::setViewRect(view_id, 0, 0, bgfx::BackbufferRatio::Equal);
             
@@ -130,14 +131,24 @@ int main(void)
                 
             bgfx::setDebug(BGFX_DEBUG_TEXT);
             bgfx::dbgTextClear();
-            bgfx::dbgTextPrintf(0, 0, 0x0f, "Supported renderers:");
+            int line = 0;
+            bgfx::dbgTextPrintf(0, ++line, 0x0f, "Selected renderer: %s", bgfx::getRendererName(renderer_type));
+            bgfx::dbgTextPrintf(0, ++line, 0x0f, "Width %d, Height %d", width, height );
+
+            ++line;
+            bgfx::dbgTextPrintf(0, ++line, 0x0f, "Supported renderers:");
             for (uint32_t i = 0; i < supported_renderer_count; i++)
             {
-                bgfx::dbgTextPrintf(0, i+1, 0x0f, "%s", bgfx::getRendererName(supported_renderers[i]));
+                bgfx::dbgTextPrintf(0, ++line, 0x0f, "%s", bgfx::getRendererName(supported_renderers[i]));
             }
-            bgfx::dbgTextPrintf(0, supported_renderer_count + 2, 0x0f, "Selected renderer: %s", bgfx::getRendererName(renderer_type));
-            bgfx::dbgTextPrintf(0, supported_renderer_count + 3, 0x0f, "Width %d, Height %d", width, height );
-                
+            
+            ++line;
+            bgfx::dbgTextPrintf(0, ++line, 0x0f, "Supported renderers found pre-init:");
+            for (uint32_t i = 0; i < pre_init_supported_renderer_count; i++)
+            {
+                bgfx::dbgTextPrintf(0, ++line, 0x0f, "%s", bgfx::getRendererName(pre_init_supported_renderers[i]));
+            }
+            
             bgfx::frame();
         }
         bgfx::shutdown();
