@@ -59,18 +59,20 @@ int main(void)
         return -1;
     }
 
+
 #if BX_PLATFORM_LINUX
     if( preferredRenderer == bgfx::RendererType::OpenGL )
     {
         pd.context = glfwGetGLXContext(window);
     }
     pd.nwh = (void*)glfwGetGLXWindow(window);
+    pd.ndt = glfwGetX11Display();
 #elif BX_PLATFORM_WINDOWS
     if( preferredRenderer == bgfx::RendererType::OpenGL )
     {
         pd.context = glfwGetWGLContext(window);
     }
-    pd.nwh = glfwGetWin32Window(window); // do not need glfwGetWGLContext(window);
+    pd.nwh = glfwGetWin32Window(window);
 #elif BX_PLATFORM_OSX
     if( preferredRenderer == bgfx::RendererType::OpenGL )
     {
