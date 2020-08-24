@@ -88,7 +88,14 @@ int main(void)
 
     const bgfx::ViewId view_id = 0;
     
-    glfwGetWindowSize(window, &width, &height);
+    if( preferredRenderer == bgfx::RendererType::OpenGL )
+    {
+        glfwGetFramebufferSize(window, &width, &height);
+    }
+    else
+    {
+        glfwGetWindowSize(window, &width, &height);
+    }
     
     std::atomic<int> shutdown(0);
 
@@ -159,7 +166,14 @@ int main(void)
     while (!glfwWindowShouldClose(window))
     {
         glfwWaitEvents(); // in this example we use wait to ensure we do not loop needlessly
-        glfwGetWindowSize(window, &width, &height);
+        if( preferredRenderer == bgfx::RendererType::OpenGL )
+        {
+            glfwGetFramebufferSize(window, &width, &height);
+        }
+        else
+        {
+            glfwGetWindowSize(window, &width, &height);
+        }
     }
     
     shutdown = 1;
