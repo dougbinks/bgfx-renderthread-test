@@ -1,7 +1,7 @@
 # bgfx-renderthread-test
 BGFX Render Thread Test
 
-This project is a test of using [bgfx](https://github.com/bkaradzic/bgfx) to render with multithreaded API thread and bgfx render thread with.
+This project is a test of using [bgfx](https://github.com/bkaradzic/bgfx) to render with multithreaded API thread and bgfx render thread.
 
 Supports Windows, Linux X11, OSX.
 
